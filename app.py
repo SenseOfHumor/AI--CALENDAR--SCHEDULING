@@ -15,7 +15,9 @@ api_key = os.getenv("OPEN_AI_API")
 # Instantiate the OpenAI client
 client = OpenAI(api_key=api_key)
 
-st.title("Calendar Event Scheduler")
+st.title("CALENDIFY 📅")
+st.subheader("AI-Powered Calendar Event Scheduler")
+st.caption("Enter your tasks and let the AI optimize your schedule for maximum productivity and efficiency.")
 
 # Set the time zone
 timezone = pytz.timezone("America/New_York")  # Replace with your local time zone
@@ -24,19 +26,19 @@ timezone = pytz.timezone("America/New_York")  # Replace with your local time zon
 if 'events' not in st.session_state:
     st.session_state.events = []
 
-# Input fields for manual task entry
-task_name = st.text_input("Task Name")
-task_date = st.date_input("Task Date", value=datetime.now().date())
-start_time = st.time_input("Start Time", value=datetime.now().time())
-end_time = st.time_input("End Time", value=(datetime.now() + timedelta(hours=1)).time())
+# # Input fields for manual task entry
+# task_name = st.text_input("Task Name")
+# task_date = st.date_input("Task Date", value=datetime.now().date())
+# start_time = st.time_input("Start Time", value=datetime.now().time())
+# end_time = st.time_input("End Time", value=(datetime.now() + timedelta(hours=1)).time())
 
-# Add Task Manually
-if st.button("Add Task"):
-    st.session_state.events.append({
-        "title": task_name,
-        "start": f"{task_date}T{start_time}",
-        "end": f"{task_date}T{end_time}"
-    })
+# # Add Task Manually
+# if st.button("Add Task"):
+#     st.session_state.events.append({
+#         "title": task_name,
+#         "start": f"{task_date}T{start_time}",
+#         "end": f"{task_date}T{end_time}"
+#     })
 
 # Display the updated calendar with the new events
 calendar(events=st.session_state.events)
