@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import os
 import json
 from datetime import datetime, timedelta
+import pytz
 
 # Load API key from .env file
 load_dotenv()
@@ -15,6 +16,9 @@ api_key = os.getenv("OPEN_AI_API")
 client = OpenAI(api_key=api_key)
 
 st.title("Calendar Event Scheduler")
+
+# Set the time zone
+timezone = pytz.timezone("America/New_York")  # Replace with your local time zone
 
 # Initialize or update the events list
 if 'events' not in st.session_state:
@@ -57,6 +61,12 @@ if st.button("Schedule Tasks with AI"):
                 - Schedule breaks between tasks.
                 - Start with the most important tasks first.
                 - Avoid scheduling tasks back-to-back without breaks.
+                - Only Schedule tasks that the user mentioned.
+                - Never overload the user's schedule.
+                - Try schedule tasks in whole hours. For example, 12:00 PM to 1:00 PM and not 12:14 PM to 1:23 PM or 12:45 PM to 1:45 PM.
+                - use a combination of longer and shorter breaks to maintain focus and productivity.
+                - If the user mentions a certaion time, use that time.
+
 
                 If the user doesn't specify dates or times, use the current date ({current_date}), 
                 with default start time 09:00 AM and end time 10:00 AM.
@@ -64,7 +74,8 @@ if st.button("Schedule Tasks with AI"):
                 Have standard time for breaks, lunch and dinner. For example, the dinner should ideally be scheduled between 6:00 PM and 8:00 PM.
                 The lunch should ideally be scheduled between 12:00 PM and 2:00 PM.
                 breaks should be ideally be somewhere between 30 minutes to 1 hour depending on the previous task intensity and the next task intensity.
-                
+                cooking ideally takes 1 hour, eating ideally takes 1 hour
+                tasks should be spread out with manageable time between them and workloads should be balanced.
 
                 Ensure that each task's end time is after its start time.
 
@@ -92,9 +103,9 @@ if st.button("Schedule Tasks with AI"):
         st.stop()
 
     for task in scheduled_tasks:
-        # Ensure valid times
-        start_time = datetime.strptime(f"{task['date']} {task['start_time']}", "%Y-%m-%d %H:%M")
-        end_time = datetime.strptime(f"{task['date']} {task['end_time']}", "%Y-%m-%d %H:%M")
+        # Ensure valid times and adjust for time zone
+        start_time = timezone.localize(datetime.strptime(f"{task['date']} {task['start_time']}", "%Y-%m-%d %H:%M"))
+        end_time = timezone.localize(datetime.strptime(f"{task['date']} {task['end_time']}", "%Y-%m-%d %H:%M"))
         
         if end_time <= start_time:
             st.error(f"Task '{task['task_name']}' has an invalid time range. End time must be after start time.")
@@ -102,8 +113,8 @@ if st.button("Schedule Tasks with AI"):
 
         st.session_state.events.append({
             "title": task["task_name"],
-            "start": task["date"] + "T" + task["start_time"],
-            "end": task["date"] + "T" + task["end_time"]
+            "start": start_time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "end": end_time.strftime("%Y-%m-%dT%H:%M:%S")
         })
 
     calendar(events=st.session_state.events)
@@ -114,8 +125,8 @@ if st.session_state.events:
     for event in st.session_state.events:
         cal_event = Event()
         cal_event.name = event["title"]
-        cal_event.begin = event["start"]
-        cal_event.end = event["end"]
+        cal_event.begin = timezone.localize(datetime.strptime(event["start"], "%Y-%m-%dT%H:%M:%S"))
+        cal_event.end = timezone.localize(datetime.strptime(event["end"], "%Y-%m-%dT%H:%M:%S"))
         cal.events.add(cal_event)
 
     with open("schedule.ics", "w") as f:
