@@ -1,0 +1,7 @@
+streamlit_calendar
+pandas
+ics
+openai
+streamlit
+python-dotenv
+pytz
