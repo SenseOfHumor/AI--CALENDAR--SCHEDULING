@@ -1,0 +1,4 @@
+streamlit_calendar
+pandas
+ics
+openai
